@@ -1,0 +1,11 @@
+name: CI-CD
+on: [push]
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Images
+        run: docker build -t backend ./backend
+      - name: Run Tests
+        run: docker run backend npm test
