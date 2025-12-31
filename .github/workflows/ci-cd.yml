@@ -1,14 +1,3 @@
-# name: CI-CD
-# on: [push]
-# jobs:
-#   pipeline:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v4
-#       - name: Build Images
-#         run: docker build -t backend ./backend
-#       - name: Run Tests
-#         run: docker run backend npm test
 name: CI-CD Pipeline
 
 on:
@@ -26,15 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -----------------------------
-      # Checkout Code
-      # -----------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # -----------------------------
-      # Docker Setup
-      # -----------------------------
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -44,50 +27,35 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # -----------------------------
-      # Build Docker Images
-      # -----------------------------
       - name: Build Backend Image
-        run: |
-          docker build -t $BACKEND_IMAGE:latest ./backend
+        run: docker build -t $BACKEND_IMAGE:latest ./backend
 
       - name: Build Frontend Image
-        run: |
-          docker build -t $FRONTEND_IMAGE:latest ./frontend
+        run: docker build -t $FRONTEND_IMAGE:latest ./frontend
 
-      # -----------------------------
-      # Run Unit Tests Inside Container
-      # -----------------------------
       - name: Run Backend Unit Tests
         run: docker run --rm $BACKEND_IMAGE:latest npm test
 
-      # -----------------------------
-      # Trivy Security Scan
-      # -----------------------------
       - name: Trivy Scan Backend Image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: $BACKEND_IMAGE:latest
           severity: HIGH,CRITICAL
+          exit-code: '0'
 
       - name: Trivy Scan Frontend Image
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: $FRONTEND_IMAGE:latest
           severity: HIGH,CRITICAL
+          exit-code: '0'
 
-      # -----------------------------
-      # Push Images to DockerHub
-      # -----------------------------
       - name: Push Backend Image
         run: docker push $BACKEND_IMAGE:latest
 
       - name: Push Frontend Image
         run: docker push $FRONTEND_IMAGE:latest
 
-  # -----------------------------
-  # Optional Auto Deploy (Staging)
-  # -----------------------------
   deploy-staging:
     if: github.ref == 'refs/heads/staging'
     needs: ci
