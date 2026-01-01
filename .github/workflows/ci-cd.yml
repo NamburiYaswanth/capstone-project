@@ -59,6 +59,7 @@ jobs:
       - name: Trivy Scan Backend Image
         run: |
           docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:latest image \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
@@ -68,6 +69,7 @@ jobs:
       - name: Trivy Scan Frontend Image
         run: |
           docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
             aquasec/trivy:latest image \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
