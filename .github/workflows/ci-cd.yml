@@ -124,11 +124,9 @@ steps:
   - name: Trivy Scan Backend Image
     uses: aquasecurity/trivy-action@master
     with:
-      image-ref: docker.io/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
-      scan-type: image
-      format: table
-      severity: HIGH,CRITICAL
-      exit-code: '0'
+    image-ref: ${{ env.BACKEND_IMAGE }}:latest
+    severity: HIGH,CRITICAL
+    exit-code: '0'
 
   - name: Trivy Scan Frontend Image
     uses: aquasecurity/trivy-action@master
