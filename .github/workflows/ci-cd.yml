@@ -1,3 +1,5 @@
+# CI/CD pipeline with fixes: use secret username for image tags, tag by SHA,
+# login in deploy job as well.
 name: CI-CD Pipeline
 
 on:
@@ -6,16 +8,17 @@ on:
       - main
       - staging
 
-env:
-  BACKEND_IMAGE: namburisai/backend
-  FRONTEND_IMAGE: namburisai/frontend
-
 jobs:
   ci:
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      BACKEND_IMAGE: ${{ env.DOCKERHUB_USERNAME }}/backend
+      FRONTEND_IMAGE: ${{ env.DOCKERHUB_USERNAME }}/frontend
+      IMAGE_TAG: ${{ github.sha }}
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
@@ -27,40 +30,64 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Backend Image
-        run: docker build -t $BACKEND_IMAGE:latest ./backend
+      - name: Build Backend image (SHA)
+        run: |
+          docker build -t $BACKEND_IMAGE:${IMAGE_TAG} ./backend
+          docker tag $BACKEND_IMAGE:${IMAGE_TAG} $BACKEND_IMAGE:latest
 
-      - name: Build Frontend Image
-        run: docker build -t $FRONTEND_IMAGE:latest ./frontend
+      - name: Build Frontend image (SHA)
+        run: |
+          docker build -t $FRONTEND_IMAGE:${IMAGE_TAG} ./frontend
+          docker tag $FRONTEND_IMAGE:${IMAGE_TAG} $FRONTEND_IMAGE:latest
 
-      - name: Run Backend Unit Tests
-        run: docker run --rm $BACKEND_IMAGE:latest npm test
+      - name: Run Backend unit tests (inside built image)
+        run: docker run --rm $BACKEND_IMAGE:${IMAGE_TAG} npm test
 
-      - name: Trivy Scan Backend Image
+      - name: Trivy scan Backend image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: $BACKEND_IMAGE:latest
+          image-ref: $BACKEND_IMAGE:${IMAGE_TAG}
           severity: HIGH,CRITICAL
           exit-code: '0'
 
-      - name: Trivy Scan Frontend Image
+      - name: Trivy scan Frontend image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: $FRONTEND_IMAGE:latest
+          image-ref: $FRONTEND_IMAGE:${IMAGE_TAG}
           severity: HIGH,CRITICAL
           exit-code: '0'
 
-      - name: Push Backend Image
-        run: docker push $BACKEND_IMAGE:latest
+      - name: Push Backend image (SHA and latest)
+        run: |
+          docker push $BACKEND_IMAGE:${IMAGE_TAG}
+          docker push $BACKEND_IMAGE:latest
 
-      - name: Push Frontend Image
-        run: docker push $FRONTEND_IMAGE:latest
+      - name: Push Frontend image (SHA and latest)
+        run: |
+          docker push $FRONTEND_IMAGE:${IMAGE_TAG}
+          docker push $FRONTEND_IMAGE:latest
 
   deploy-staging:
     if: github.ref == 'refs/heads/staging'
     needs: ci
     runs-on: ubuntu-latest
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      BACKEND_IMAGE: ${{ env.DOCKERHUB_USERNAME }}/backend:${{ github.sha }}
+      FRONTEND_IMAGE: ${{ env.DOCKERHUB_USERNAME }}/frontend:${{ github.sha }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to DockerHub (needed on this runner if deploy script pulls images)
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
       - name: Deploy to Staging
-        run: bash deploy/staging-deploy.sh
+        run: |
+          echo "Using backend image: $BACKEND_IMAGE"
+          echo "Using frontend image: $FRONTEND_IMAGE"
+          bash deploy/staging-deploy.sh
