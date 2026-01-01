@@ -64,8 +64,6 @@
 #       - name: Deploy to Staging
 #         run: echo "Staging deployment triggered"
 
-
-
 name: CI-CD Pipeline
 
 on:
@@ -81,7 +79,7 @@ env:
   IMAGE_TAG: latest
 
 jobs:
-  ci:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -109,12 +107,13 @@ jobs:
       - name: Push Frontend Image
         run: docker push $FRONTEND_IMAGE:$IMAGE_TAG
 
+
   trivy-scan:
-    needs: ci
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Trivy Scan Backend Image (Registry)
+      - name: Trivy Scan Backend Image (DockerHub)
         uses: aquasecurity/trivy-action@0.20.0
         with:
           image-ref: docker.io/${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
@@ -122,7 +121,7 @@ jobs:
           severity: HIGH,CRITICAL
           exit-code: '0'
 
-      - name: Trivy Scan Frontend Image (Registry)
+      - name: Trivy Scan Frontend Image (DockerHub)
         uses: aquasecurity/trivy-action@0.20.0
         with:
           image-ref: docker.io/${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
