@@ -64,7 +64,6 @@
 #       - name: Deploy to Staging
 #         run: echo "Staging deployment triggered"
 
-
 name: CI-CD Pipeline
 
 on:
@@ -122,13 +121,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Pull images before scanning (IMPORTANT)
+      - name: Pull images before scanning
         run: |
           docker pull ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
           docker pull ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
 
       - name: Trivy Scan Backend Image
-        uses: aquasecurity/trivy-action@v0.20.0
+        uses: aquasecurity/trivy-action@v0.19.0
         with:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ env.IMAGE_TAG }}
           scan-type: image
@@ -137,7 +136,7 @@ jobs:
           exit-code: '0'
 
       - name: Trivy Scan Frontend Image
-        uses: aquasecurity/trivy-action@v0.20.0
+        uses: aquasecurity/trivy-action@v0.19.0
         with:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ env.IMAGE_TAG }}
           scan-type: image
