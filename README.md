@@ -48,34 +48,24 @@ Automated unit tests are executed inside containers to ensure runtime consistenc
 If any test fails, the pipeline stops immediately and reports the failure.
 <img width="374" height="142" alt="image" src="https://github.com/user-attachments/assets/d0fd41b4-ca66-4ce7-9723-2d91e8c55b6c" />
 
- Pre-Deployment Checklist
+Deployment Runbook :
 
 Source code merged successfully
-
 All pipeline stages passed
-
 Docker images available in registry
-
 Environment variables configured
-
- Deployment Steps
-
+Deployment Steps
 Pull latest container images
-
 Start frontend, backend, and database containers
-
 Verify container health status
-
 Validate application via browser/API
 
- Post-Deployment Validation
+Deployment Validation :
 
 Check application accessibility
-
 Verify logs for errors
-
 Monitor system performance
- 
+Troble shooting guide :
 
   Issue                        Possible Cause                Resolution                      
 
@@ -84,6 +74,12 @@ Monitor system performance
  Container not starting       Port or env issue             Verify ports and env variables  
  Backend API errors           DB connectivity issue         Check database container status 
  Slow build times             Cache not used                Enable Docker layer caching     
+
+ Demo imaes :
+ <img width="1362" height="722" alt="Screenshot 2026-01-12 071759" src="https://github.com/user-attachments/assets/d1eb4bb5-bfa0-49c0-ac72-ea4619629674" />
+<img width="1358" height="681" alt="Screenshot 2026-01-12 071743" src="https://github.com/user-attachments/assets/6d5775ec-f3eb-4416-b71e-db2cc8a2f0b7" />
+<img width="1365" height="729" alt="Screenshot 2026-01-12 071711" src="https://github.com/user-attachments/assets/d0e7bd35-b830-4904-b463-aeb97a2f3a7f" />
+
 
 
 
